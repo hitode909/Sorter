@@ -15,49 +15,49 @@ sub get_values {
     @{$self->values};
 }
 
+sub get_value {
+    my ($self, $index) = @_;
+    $self->values->[$index];
+}
+
 sub set_values {
     my $self = shift;
     $self->values([@_]);
-    undef $self->{_pivot};
+    $self;
+}
+
+sub push_value {
+    my ($self, $value) = @_;
+    push @{$self->values}, $value;
     $self;
 }
 
 sub sort {
     my $self = shift;
 
-    return $self->get_values if $self->_length <= 1;
-    my $a = __PACKAGE__->new;
-    my $b = __PACKAGE__->new;
-    my $pivot = $self->_get_pivot;
-    $a->set_values($self->_left($pivot));
-    $b->set_values($self->_right($pivot));
-    $a->sort;
-    $b->sort;
-    $self->set_values($a->get_values, $pivot, $b->get_values);
+    return $self unless $self->length > 1;
+
+    my $pivot_index = int rand $self->length;
+    my $pivot = $self->get_value($pivot_index);
+
+    my $left  = __PACKAGE__->new;
+    my $right = __PACKAGE__->new;
+
+    foreach (0..$self->length-1) {
+        next if $_ == $pivot_index;
+        my $value = $self->get_value($_);
+        ($value < $pivot ? $left : $right)->push_value($value);
+    }
+
+    $left->sort;
+    $right->sort;
+    $self->set_values($left->get_values, $pivot, $right->get_values);
+    $self;
 }
 
-sub _get_pivot {
-    my $self = shift;
-    my @values = $self->get_values;
-    my $index = int rand scalar @values;
-    my $pivot = $values[$index];
-    $self->set_values(@values[0..$index-1], @values[$index+1..(scalar @values-1)]);
-    $pivot;
-}
-
-sub _length {
+sub length {
     my $self = shift;
     scalar @{$self->values};
-}
-
-sub _left {
-    my ($self, $pivot) = @_;
-    grep { $_ < $pivot } $self->get_values;
-}
-
-sub _right {
-    my ($self, $pivot) = @_;
-    grep { $_ >= $pivot } $self->get_values;
 }
 
 1;
