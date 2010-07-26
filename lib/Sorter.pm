@@ -39,8 +39,9 @@ sub sort {
 sub _get_pivot {
     my $self = shift;
     my @values = $self->get_values;
-    my $pivot = shift @values;
-    $self->set_values(@values);
+    my $index = int rand scalar @values;
+    my $pivot = $values[$index];
+    $self->set_values(@values[0..$index-1], @values[$index+1..(scalar @values-1)]);
     $pivot;
 }
 
